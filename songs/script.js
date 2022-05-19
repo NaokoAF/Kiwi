@@ -67,38 +67,25 @@ function onLoadGist(data){
 	const songsFile = data.files[songsFileName];
 	const queueFile = data.files[queueFileName];
 	const artworksFile = data.files[artworksFileName];
-	if(!songsFile || !queueFile){
+	if(!songsFile || !queueFile || !artworksFile){
 		console.log(`No ${moduleName} files found`);
 		return;
 	}
 
-	// TODO: Load queue, then artworks, then songs (instead of doing it in parallel)
+	// Load queue data
+	$.getJSON(queueFile.raw_url, function(queueData){
+		onLoadQueue(queueData);
 
-	if(queueFile.truncated){
-		$.getJSON(queueFile.raw_url, function(queueData){
-			onLoadQueue(queueData);
-		});
-	}else{
-		onLoadQueue(JSON.parse(queueFile.content));
-	}
+		// Load artwork data
+		$.getJSON(artworksFile.raw_url, function(artworkData){
+			onLoadArtworks(artworkData);
 
-	if(artworksFile){
-		if(artworksFile.truncated){
-			$.getJSON(artworksFile.raw_url, function(artworkData){
-				onLoadArtworks(artworkData);
+			// Load song data
+			$.getJSON(songsFile.raw_url, function(songData){
+				onLoadSongs(songData);
 			});
-		}else{
-			onLoadArtworks(JSON.parse(artworksFile.content));
-		}
-	}
-
-	if(songsFile.truncated){
-		$.getJSON(songsFile.raw_url, function(songData){
-			onLoadSongs(songData);
 		});
-	}else{
-		onLoadSongs(JSON.parse(songsFile.content));
-	}
+	});
 }
 
 function onLoadQueue(data){
@@ -122,6 +109,15 @@ function onLoadQueue(data){
 	$("#description").text(desc);
 }
 
+function onLoadArtworks(data){
+	if(!data || !data.artworks){
+		console.log("Invalid artwork data");
+		return;
+	}
+
+	artworks = data.artworks;
+}
+
 function onLoadSongs(data){
 	if(!data || !data.hash || !data.songs){
 		console.log("Invalid song data");
@@ -141,15 +137,6 @@ function onLoadSongs(data){
 	updateSearch();
 
 	$("#song-list-loading").fadeOut(500);
-}
-
-function onLoadArtworks(data){
-	if(!data || !data.artworks){
-		console.log("Invalid artwork data");
-		return;
-	}
-
-	artworks = data.artworks;
 }
 
 function createSong(song){
