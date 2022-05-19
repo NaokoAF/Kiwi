@@ -173,10 +173,9 @@ function createSong(song){
 
 		const scale = value / 6;
 		const icon = `icons/${diff.icon}`;
-		const text = `${diff.displayName}: ${value}`;
 
 		difficultiesHtml += `
-			<div class="song-difficulty" title="${text}">
+			<div class="song-difficulty">
 				<div class="song-difficulty__background"
 					style="transform: scaleY(${scale*100}%)"
 				></div>
