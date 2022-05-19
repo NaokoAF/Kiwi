@@ -1,4 +1,6 @@
 const GIST_API_URL = "https://api.github.com/gists/";
+const YOUTUBE_SEARCH_URL = "https://www.youtube.com/results?search_query=";
+const CHORUS_SEARCH_URL = "https://chorus.fightthe.pw/search?query=";
 const PAGE_SIZE = 50;
 
 const params = new URLSearchParams(window.location.search);
@@ -177,10 +179,11 @@ function createSong(song){
 
 	const element = $(`
 		<div class="song">
-			<div class="song__image"
+			<a class="song__image"
 				style="background-image: url(data:image/jpeg;base64,${utils.escape(artworks[song.artwork])})"
 				title="${utils.escape(song.album)} (${utils.escape(song.year)})"
-			></div>
+				href="${CHORUS_SEARCH_URL}${utils.escape(`name="${song.name}" artist="${song.artist}" charter="${song.charter}"`)}"
+			></a>
 
 			<div class="song__main">
 				<div class="song__title">
