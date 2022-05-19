@@ -29,4 +29,19 @@ const utils = {
 
 		return result;
 	},
+
+	shuffle(a){
+		if(!a)
+			return a;
+
+		let index;
+		let temp;
+		for(let i = a.length - 1; i > 0; i--) {
+			index = Math.floor(Math.random() * (i + 1));
+			temp = a[i];
+			a[i] = a[index];
+			a[index] = temp;
+		}
+		return a;
+	},
 };

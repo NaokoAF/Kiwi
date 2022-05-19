@@ -228,7 +228,8 @@ function updateSearch(start, end){
 		queriedSongListEnd = PAGE_SIZE;
 
 		if(query === ""){
-			queriedSongList = songs;
+			queriedSongList = [...songs];
+			utils.shuffle(queriedSongList);
 		}else{
 			for(const song of songs){
 				let found = false;
