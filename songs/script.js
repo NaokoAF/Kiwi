@@ -1,20 +1,45 @@
 const GIST_API_URL = "https://api.github.com/gists/";
+const PAGE_SIZE = 50;
 
 const params = new URLSearchParams(window.location.search);
 let gistId = null;
-let songData = null;
-let songMap = new Map();
+let gistData = null;
+
+let artworks = {};
+let sources = {};
+let songs = [];
+let queriedSongList = [];
+let queriedSongListEnd = 0;
+let songElementMap = new Map();
+
+const difficulties = [
+	{ name: "guitar", displayName: "Guitar", icon: "guitar.png" },
+	{ name: "bass", displayName: "Bass", icon: "bass.png" },
+	{ name: "coop", displayName: "Guitar (Coop)", icon: "guitar-coop.png" },
+	{ name: "rhythm", displayName: "Rhythm Guitar", icon: "guitar-rhythm.png" },
+	{ name: "ghl", displayName: "Guitar Hero Live", icon: "guitar-ghl.png" },
+	{ name: "drums", displayName: "Drums", icon: "drums.png" },
+	{ name: "keys", displayName: "Keys", icon: "keys.png" },
+	{ name: "band", displayName: "Full Band", icon: "band.png" },
+];
+
+const difficultiesToShow = [
+	"guitar", "bass", "drums"
+];
 
 $(document).ready(onLoad);
 
 function onLoad(){
+	$("#song-list-loading").show();
+	$("#load-more").on("click", loadMore);
+
 	if(params.has("gist")){
 		gistId = params.get("gist");
 		console.log("Gist " + gistId);
 
 		loadGist();
 	}else{
-		console.log("No Gist specified");
+		$("#error").text("No Gist specified");
 	}
 
 	$("#song-search").submit((e) => {
@@ -26,48 +51,75 @@ function onLoad(){
 }
 
 function loadGist(){
-	const gistCache = localStorage.getItem("gistCache");
-	if(gistCache != null){
-		console.log("Loading gist from cache");
-		// const cacheDate = localStorage.getItem("gistCacheDate");
-		onLoadGist(JSON.parse(gistCache));
-		return;
-	}
-
 	$.getJSON(GIST_API_URL + gistId, function(data){
 		onLoadGist(data);
 	});
 }
 
 function onLoadGist(data){
-	localStorage.setItem("gistCache", JSON.stringify(data));
-	localStorage.setItem("gistCacheDate", new Date());
+	gistData = data;
+	console.log(data);
 
-	const chSongsFileName = `Kiwi-${"CH"}-songs.json`;
-	const chQueueFileName = `Kiwi-${"CH"}-queue.json`;
-	const chSongsFile = data.files[chSongsFileName];
-	const chQueueFile = data.files[chSongsFileName];
-	if(!chSongsFile || !chQueueFile){
-		console.log("No CH file found");
+	const moduleName = "CH";
+	const songsFileName = `Kiwi-${moduleName}-songs.json`;
+	const queueFileName = `Kiwi-${moduleName}-queue.json`;
+	const artworksFileName = `Kiwi-${moduleName}-artworks.json`;
+	const songsFile = data.files[songsFileName];
+	const queueFile = data.files[queueFileName];
+	const artworksFile = data.files[artworksFileName];
+	if(!songsFile || !queueFile){
+		console.log(`No ${moduleName} files found`);
 		return;
 	}
 
-	const songsCache = localStorage.getItem("songsCache");
-	if(songsCache != null){
-		console.log("Loading songs from cache");
-		onLoadSongs(JSON.parse(songsCache));
-		return;
+	// TODO: Load queue, then artworks, then songs (instead of doing it in parallel)
+
+	if(queueFile.truncated){
+		$.getJSON(queueFile.raw_url, function(queueData){
+			onLoadQueue(queueData);
+		});
+	}else{
+		onLoadQueue(JSON.parse(queueFile.content));
 	}
 
-	if(chSongsFile.truncated){
-		$.getJSON(chSongsFile.raw_url, function(songData){
-			localStorage.setItem("songsCache", JSON.stringify(songData));
-			localStorage.setItem("songsCacheDate", new Date());
+	if(artworksFile){
+		if(artworksFile.truncated){
+			$.getJSON(artworksFile.raw_url, function(artworkData){
+				onLoadArtworks(artworkData);
+			});
+		}else{
+			onLoadArtworks(JSON.parse(artworksFile.content));
+		}
+	}
+
+	if(songsFile.truncated){
+		$.getJSON(songsFile.raw_url, function(songData){
 			onLoadSongs(songData);
 		});
 	}else{
-		onLoadSongs(chSongsFile.content);
+		onLoadSongs(JSON.parse(songsFile.content));
 	}
+}
+
+function onLoadQueue(data){
+	if(!data){
+		console.log("Invalid queue data");
+		return;
+	}
+
+	let avatar = gistData.owner.avatar_url;
+	let title = `${gistData.owner.login}'s Song List`;
+	let desc = "";
+
+	if(data.songList){
+		avatar = data.songList.avatar || avatar;
+		title = data.songList.name || title;
+		desc = data.songList.description || desc;
+	}
+
+	$("#avatar").attr("src", avatar);
+	$("#title").text(title);
+	$("#description").text(desc);
 }
 
 function onLoadSongs(data){
@@ -76,94 +128,131 @@ function onLoadSongs(data){
 		return;
 	}
 
-	songData = data;
-	songMap.clear();
+	songs = data.songs;
+	sources = data.sources;
 
-	for(const song of data.songs){
-		if(songMap.has(song.hash)){
-			continue;
-		}
+	destroyAllSongs();
 
-		const metadata = song.metadata;
-
-		let source = data.sources[metadata.icon];
-		if(source)
-			source = source.replace("=' ", ""); // not necessary anymore
-		else
-			source = song.folder.split("\\")[0]; // this is gross
-
-		song.source = source;
-
-		$("#song-list").append(`
-			<div class="song" id="song-${song.hash}">
-				<div class="song__title">
-					<div class="song__name">${metadata.name}</div>
-					<div class="song__artist">${metadata.artist}</div>
-					<div class="song__charter">${metadata.charter}</div>
-				</div>
-				<div class="song__info">${metadata.album} (${metadata.year}) • ${metadata.genre} • ${formatLength(metadata.song_length)}</div>
-				<div class="song__info">${song.source}</div>
-
-				<div class="song__hash">!request ${song.hash}</div>
-			</div>
-		`);
-
-		songMap.set(song.hash, $(`#song-${song.hash}`));
-	}
-
-	console.log(data.songs.length + " songs loaded");
-	console.log(data.songs);
-	console.log(data.sources);
-	console.log(data.songs[0]);
+	console.log(songs.length + " songs loaded");
+	console.log(songs);
+	console.log(sources);
+	console.log(songs[0]);
 
 	updateSearch();
+
+	$("#song-list-loading").fadeOut(500);
 }
 
-function formatLength(length){
-	const totalSeconds = length / 1000;
+function onLoadArtworks(data){
+	if(!data || !data.artworks){
+		console.log("Invalid artwork data");
+		return;
+	}
 
-	const hours = Math.floor(totalSeconds / 3600);
-	const minutes = Math.floor(totalSeconds / 60 % 3600);
-	const seconds = Math.floor(totalSeconds % 60);
-
-	let result = "";
-	if(hours > 0)
-		result += hours + ":";
-	if(minutes > 0)
-		result += minutes.toLocaleString("en-US", { minimumIntegerDigits: 2, useGrouping: false }) + ":";
-
-	result += seconds.toLocaleString("en-US", { minimumIntegerDigits: 2, useGrouping: false });
-
-	return result;
+	artworks = data.artworks;
 }
 
-function updateSearch(){
+function createSong(song){
+	let source = sources[song.source];
+	if(source)
+		source = source.replace("=' ", ""); // not necessary anymore
+	else
+		source = "No Source";
+
+	song.source = source;
+
+	let difficultiesHtml = "";
+	for(let i = 0; i < difficulties.length; i++){
+		const diff = difficulties[i];
+		if(!difficultiesToShow.includes(diff.name))
+			continue;
+
+		const value = song[`diff_${diff.name}`];
+		if(isNaN(value) || value === "-1")
+			continue;
+
+		const scale = value / 6;
+		const icon = `icons/${diff.icon}`;
+		const text = `${diff.displayName}: ${value}`;
+
+		difficultiesHtml += `
+			<div class="song-difficulty" title="${text}">
+				<div class="song-difficulty__background"
+					style="transform: scaleY(${scale*100}%)"
+				></div>
+
+				<img class="song-difficulty__icon"
+					src="${icon}"
+					alt="${diff.displayName}"
+				/>
+			</div>
+		`;
+	}
+
+	const element = $(`
+		<div class="song">
+			<div class="song__image"
+				style="background-image: url(data:image/jpeg;base64,${artworks[song.artwork]})"
+			></div>
+
+			<div class="song__main">
+				<div class="song__title">
+					<div class="song__name">${utils.escape(song.name)}</div>
+					<div class="song__artist">${utils.escape(song.artist)}</div>
+					<div class="song__charter">${utils.escape(song.charter)}</div>
+				</div>
+				<div class="song__content">
+					<div class="song__group">
+						<div class="song__info">
+							${utils.escape(song.album)} (${utils.escape(song.year)}) • ${utils.escape(song.genre)} • ${utils.formatLength(song.length)}<br>
+							${utils.escape(song.source)}
+						</div>
+
+						<div class="song__hash">!request ${utils.escape(song.hash)}</div>
+					</div>
+					<div class="song__group song__group--difficulties">
+						${difficultiesHtml}
+					</div>
+				</div>
+			</div>
+		</div>
+	`);
+
+	$("#song-list").append(element);
+	songElementMap.set(song, element);
+
+	return element;
+}
+
+function destroyAllSongs(){
+	$("#song-list").empty();
+	songElementMap.clear();
+}
+
+function updateSearch(start, end){
 	const query = $("#song-search-field").val().trim().toLowerCase();
 
-	if(query === ""){
-		for(const song of songData.songs){
-			const $songElement = songMap.get(song.hash);
-			if($songElement){
-				$songElement.show();
-			}
-		}
-	}else{
-		for(const song of songData.songs){
-			const $songElement = songMap.get(song.hash);
-			if($songElement){
+	if(!start && !end){
+		destroyAllSongs();
+		queriedSongList = [];
+		queriedSongListEnd = PAGE_SIZE;
+
+		if(query === ""){
+			queriedSongList = songs;
+		}else{
+			for(const song of songs){
 				let found = false;
 				if(song.hash.toLowerCase() === query){
 					found = true;
 				}else{
-					const metadata = song.metadata;
 					const fields = [
-						metadata.name,
-						metadata.artist,
-						metadata.charter,
-						metadata.genre,
-						metadata.year,
-						metadata.icon,
-						song.folder,
+						song.name,
+						song.artist,
+						song.charter,
+						song.genre,
+						song.year,
+						song.source,
+						song.playlist,
 						song.source,
 					];
 
@@ -178,11 +267,30 @@ function updateSearch(){
 				}
 
 				if(found){
-					$songElement.show();
-				}else{
-					$songElement.hide();
+					queriedSongList.push(song);
 				}
 			}
 		}
+		
+		start = 0;
+		end = queriedSongListEnd;
 	}
+
+	for(let i = start; i < Math.min(end, queriedSongList.length); i++){
+		createSong(queriedSongList[i]);
+	}
+
+	$("#query-info").text(`${songElementMap.size}/${queriedSongList.length} songs listed.`);
+	if(songElementMap.size === queriedSongList.length){
+		$("#load-more").hide();
+	}else{
+		$("#load-more").show();
+	}
+}
+
+function loadMore(){
+	start = queriedSongListEnd;
+	queriedSongListEnd += PAGE_SIZE;
+
+	updateSearch(start, queriedSongListEnd);
 }

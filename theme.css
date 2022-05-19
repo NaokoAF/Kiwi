@@ -1,0 +1,13 @@
+:root {
+	--color-accent: #ff84bd;
+	--color-text-normal: #eeeeee;
+	--color-text-muted: #ac94c1;
+	--color-text-dark: #2b2231;
+
+	--color-difficulty: #f11f63;
+
+	--color-background-primary: #403349;
+	--color-background-secondary: #362a3f;
+	--color-background-tertiary: #2b2231;
+	--color-background-accent: #6a597a;
+}
