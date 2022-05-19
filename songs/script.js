@@ -191,7 +191,7 @@ function createSong(song){
 	const element = $(`
 		<div class="song">
 			<div class="song__image"
-				style="background-image: url(data:image/jpeg;base64,${artworks[song.artwork]})"
+				style="background-image: url(data:image/jpeg;base64,${utils.escape(artworks[song.artwork])})"
 			></div>
 
 			<div class="song__main">
