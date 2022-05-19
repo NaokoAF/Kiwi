@@ -16,7 +16,7 @@ const utils = {
 		const totalSeconds = length / 1000;
 
 		const hours = Math.floor(totalSeconds / 3600);
-		const minutes = Math.floor(totalSeconds / 60 % 3600);
+		const minutes = Math.floor(totalSeconds / 60 % 60);
 		const seconds = Math.floor(totalSeconds % 60);
 
 		let result = "";
