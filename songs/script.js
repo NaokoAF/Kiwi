@@ -175,19 +175,23 @@ function createSong(song){
 		`;
 	}
 
+	const songLink = CHORUS_SEARCH_URL + utils.escape(`name="${song.name}" artist="${song.artist}" charter="${song.charter}"`);
+	const artistLink = CHORUS_SEARCH_URL + utils.escape(`artist="${song.artist}"`);
+	const charterLink = CHORUS_SEARCH_URL + utils.escape(`charter="${song.charter}"`);
+
 	const element = $(`
 		<div class="song">
 			<a class="song__image"
 				style="background-image: url(data:image/jpeg;base64,${utils.escape(artworks[song.artwork])})"
 				title="${utils.escape(song.album)} (${utils.escape(song.year)})"
-				href="${CHORUS_SEARCH_URL}${utils.escape(`name="${song.name}" artist="${song.artist}" charter="${song.charter}"`)}"
+				href="${songLink}"
 			></a>
 
 			<div class="song__main">
 				<div class="song__title">
-					<div class="song__name">${utils.escape(song.name)}</div>
-					<div class="song__artist">${utils.escape(song.artist)}</div>
-					<div class="song__charter">${utils.escape(song.charter)}</div>
+					<a class="song__text song__text--name" href="${songLink}">${utils.escape(song.name)}</a>
+					<a class="song__text song__text--artist" href="${artistLink}">${utils.escape(song.artist)}</a>
+					<a class="song__text song__text--charter" href="${charterLink}">${utils.escape(song.charter)}</a>
 				</div>
 				<div class="song__content">
 					<div class="song__group">
