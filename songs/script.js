@@ -107,6 +107,8 @@ function onLoadQueue(data){
 	$("#avatar").attr("src", avatar);
 	$("#title").text(title);
 	$("#description").text(desc);
+
+	document.title = title;
 }
 
 function onLoadArtworks(data){
