@@ -148,8 +148,6 @@ function createSong(song){
 	if(!source)
 		source = "No Source";
 
-	song.source = source;
-
 	let difficultiesHtml = "";
 	for(let i = 0; i < difficulties.length; i++){
 		const diff = difficulties[i];
@@ -195,7 +193,7 @@ function createSong(song){
 					<div class="song__group">
 						<div class="song__info">
 							${utils.escape(song.album)} (${utils.escape(song.year)}) • ${utils.escape(song.genre)} • ${utils.formatLength(song.length)}<br>
-							${utils.escape(song.source)}
+							${utils.escape(source)}
 						</div>
 
 						<div class="song__hash">!request ${utils.escape(song.hash)}</div>
@@ -242,9 +240,8 @@ function updateSearch(start, end){
 						song.charter,
 						song.genre,
 						song.year,
-						song.source,
 						song.playlist,
-						song.source,
+						sources[song.source],
 					];
 
 					for(const field of fields){
