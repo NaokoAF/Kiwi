@@ -192,6 +192,7 @@ function createSong(song){
 		<div class="song">
 			<div class="song__image"
 				style="background-image: url(data:image/jpeg;base64,${utils.escape(artworks[song.artwork])})"
+				title="${utils.escape(song.album)} (${utils.escape(song.year)})"
 			></div>
 
 			<div class="song__main">
