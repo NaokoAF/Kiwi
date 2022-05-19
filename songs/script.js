@@ -143,9 +143,7 @@ function onLoadSongs(data){
 
 function createSong(song){
 	let source = sources[song.source];
-	if(source)
-		source = source.replace("=' ", ""); // not necessary anymore
-	else
+	if(!source)
 		source = "No Source";
 
 	song.source = source;
