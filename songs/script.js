@@ -283,7 +283,8 @@ function updateSearch(start, end){
 		createSong(queriedSongList[i]);
 	}
 
-	$("#query-info").text(`${songElementMap.size}/${queriedSongList.length} songs listed.`);
+	$("#query-info").text(`${queriedSongList.length} of ${songs.length} songs found`);
+
 	if(songElementMap.size === queriedSongList.length){
 		$("#load-more").hide();
 	}else{
