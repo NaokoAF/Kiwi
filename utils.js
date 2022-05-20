@@ -24,6 +24,8 @@ const utils = {
 			result += hours + ":";
 		if(minutes > 0)
 			result += minutes.toLocaleString("en-US", { minimumIntegerDigits: 2, useGrouping: false }) + ":";
+		else
+			result += "00:";
 
 		result += seconds.toLocaleString("en-US", { minimumIntegerDigits: 2, useGrouping: false });
 
