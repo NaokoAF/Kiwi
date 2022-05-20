@@ -18,13 +18,17 @@ const difficulties = [
 	{ name: "guitar", displayName: "Guitar", icon: "guitar.png" },
 	{ name: "bass", displayName: "Bass", icon: "bass.png" },
 	{ name: "coop", displayName: "Guitar (Coop)", icon: "guitar-coop.png" },
-	{ name: "rhythm", displayName: "Rhythm Guitar", icon: "guitar-rhythm.png" },
-	{ name: "ghl", displayName: "Guitar Hero Live", icon: "guitar-ghl.png" },
+	{ name: "rhythm", displayName: "Rhythm Guitar", icon: "rhythm.png" },
+	{ name: "guitarghl", displayName: "GHL Guitar", icon: "ghl-guitar.png" },
+	{ name: "bassghl", displayName: "GHL Bass", icon: "ghl-bass.png" },
+	{ name: "coopghl", displayName: "GHL Guitar (Coop)", icon: "ghl-guitar-coop.png" },
+	{ name: "rhythmghl", displayName: "GHL Rhythm Guitar", icon: "ghl-rhythm.png" },
 	{ name: "drums", displayName: "Drums", icon: "drums.png" },
 	{ name: "keys", displayName: "Keys", icon: "keys.png" },
-	{ name: "band", displayName: "Full Band", icon: "band.png" },
+	// { name: "band", displayName: "Full Band", icon: "band.png" },
 ];
 
+// TODO: Load this from gist
 const difficultiesToShow = [
 	"guitar", "bass", "drums"
 ];
@@ -158,14 +162,21 @@ function createSong(song){
 		if(isNaN(value) || value === "-1")
 			continue;
 
-		const scale = value / 6;
+		let ratio = value / 6;
+		if(ratio < 0)
+			ratio = 0;
+		else if(ratio > 1)
+			ratio = 1;
+
 		const icon = `icons/${diff.icon}`;
+
+		const arc = arcDrawer.describeArc(25, 25, 25, 0, ratio * 360, true);
 
 		difficultiesHtml += `
 			<div class="song-difficulty">
-				<div class="song-difficulty__background"
-					style="transform: scaleY(${scale*100}%)"
-				></div>
+				<svg>
+					<path fill="var(--color-difficulty)" d="${arc}" />
+				</svg>
 
 				<img class="song-difficulty__icon"
 					src="${icon}"
