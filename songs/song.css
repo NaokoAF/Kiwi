@@ -73,7 +73,7 @@
 	font-weight: 500;
 }
 
-.song__hash {
+.song__request {
 	color: var(--color-text-dark);
 	background: var(--color-accent);
 	margin-top: 10px;
@@ -83,14 +83,7 @@
 	border-style: none;
 	border-radius: 5px;
 	align-self: flex-start;
-	/* align-self: stretch;
-	text-align: center; */
 }
-
-
-/* .song__hash:focus {
-	outline: none;
-} */
 
 
 

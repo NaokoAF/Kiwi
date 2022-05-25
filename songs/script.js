@@ -211,7 +211,7 @@ function createSong(song){
 							${utils.escape(source)}
 						</div>
 
-						<div class="song__hash">!request ${utils.escape(song.hash)}</div>
+						<div class="song__request">!request ${utils.escape(song.id || song.hash)}</div>
 					</div>
 					<div class="song__group song__group--difficulties">
 						${difficultiesHtml}
@@ -246,26 +246,24 @@ function updateSearch(start, end){
 		}else{
 			for(const song of songs){
 				let found = false;
-				if(song.hash.toLowerCase() === query){
-					found = true;
-				}else{
-					const fields = [
-						song.name,
-						song.artist,
-						song.charter,
-						song.genre,
-						song.year,
-						song.playlist,
-						sources[song.source],
-					];
+				const fields = [
+					song.id,
+					song.hash,
+					song.name,
+					song.artist,
+					song.charter,
+					song.genre,
+					song.year,
+					song.playlist,
+					sources[song.source],
+				];
 
-					for(const field of fields){
-						if(!field) continue;
+				for(const field of fields){
+					if(!field) continue;
 
-						if(field.toLowerCase().includes(query)){
-							found = true;
-							break;
-						}
+					if(field.toLowerCase().includes(query)){
+						found = true;
+						break;
 					}
 				}
 
